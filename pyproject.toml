@@ -1,0 +1,12 @@
+[project]
+name = "job-intelligence-platform"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.24.4",
+    "pandas>=2.0.3",
+    "pydantic>=2.10.6",
+    "scikit-learn>=1.3.2",
+]
