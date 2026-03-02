@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import List
 
-from models import PreprocessedJob
+from src.data.models import PreprocessedJob
 
 SELECTED_COLUMNS = [
     "job_id",
@@ -67,7 +67,8 @@ def main():
 
     print("🚀 Starting preprocessing pipeline...")
 
-    df_raw = pd.read_csv("src\data\postings.csv")
+    # Read raw CSV from dedicated CSV folder
+    df_raw = pd.read_csv("src/data/csv/postings.csv")
 
     print("Raw dataset:", df_raw.shape)
 
@@ -81,9 +82,9 @@ def main():
 
     df_valid = pd.DataFrame([job.model_dump() for job in jobs])
 
-    df_valid.to_csv("src/data/jobs_clean.csv", index=False)
+    df_valid.to_csv("src/data/csv/jobs_clean.csv", index=False)
 
-    print("Cleaned dataset saved → jobs_clean.csv")
+    print("Cleaned dataset saved → csv/jobs_clean.csv")
     print("Final dataset shape:", df_valid.shape)
 
 

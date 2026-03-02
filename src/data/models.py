@@ -11,6 +11,7 @@ class PreprocessedJob(BaseModel):
     location: Optional[str] = None
 
     views: float = 0
+    salary_available: int = 0
     normalized_salary: float = 0
 
     listed_time: Optional[datetime] = None
