@@ -24,7 +24,7 @@ def main():
     retrieved = engine.retrieve(query, top_k=candidate_k)
 
     # Step 2: hybrid re-ranking (learned-ish heuristic ranker)
-    ranker = JobRanker(alpha=0.6, beta=0.2, gamma=0.1, delta=0.1)
+    ranker = JobRanker(alpha=0.6, beta=0.2, gamma=0.1, salary_boost=0.1)
     ranked = ranker.rank(retrieved)
 
     # Step 3: print final ranked results
