@@ -205,3 +205,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project datasets (keep code, ignore large data files)
+src/data/*.csv
+src/data/*.tsv
