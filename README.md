@@ -20,7 +20,7 @@ This project demonstrates how modern job recommendation systems can be built by 
 The system is designed as a **modular ML pipeline**, allowing each stage to be independently improved or replaced.
 
 
-# Architecture Overview
+## Architecture Overview
 ```
 Raw Job Dataset
 ↓
@@ -42,7 +42,7 @@ This architecture reflects many **real-world recommendation and search systems**
 - LLMs provide interpretability
 
 
-# Project Structure
+## Project Structure
 ```
 src/
 ├── data/
@@ -66,32 +66,30 @@ src/
 └── cli.py # unified CLI entrypoint
 ```
 
-# Core System Components
+## Core System Components
 
-## Retrieval Layer
+### Retrieval Layer
 
 Generates candidate jobs using **TF-IDF vectorization with cosine similarity**.
 
 This stage efficiently narrows the search space by identifying jobs whose titles and descriptions are textually similar to the user query.
 
 
-## Hybrid Ranking Model
+### Hybrid Ranking Model
 
 Retrieved candidates are re-ranked using multiple signals.
+```
 Final Score =
-α · textual similarity
-
-β · recency score
-
-γ · popularity score
-
-optional salary boost
-
+α × textual similarity
++ β × recency score
++ γ × popularity score
++ optional salary boost
+```
 
 Signal normalization ensures stable ranking behavior across different features.
 
 
-## Evaluation Framework
+### Evaluation Framework
 
 The platform includes an **offline evaluation pipeline** implementing:
 
@@ -107,14 +105,14 @@ This allows systematic comparison between:
 
 Example output:
 
-
+```
 Retrieval only: Recall@10 = 0.70 MRR@10 = 0.45
 Normalized ranking: Recall@10 = 0.68 MRR@10 = 0.43
 Salary boost ranking: Recall@10 = 0.68 MRR@10 = 0.43
+```
 
 
-
-## RAG Explanation Layer
+### RAG Explanation Layer
 
 A local LLM (via **Ollama**) generates explanations for recommended jobs.
 
@@ -122,7 +120,7 @@ The model receives the **top ranked jobs as context** and produces grounded reas
 
 Example:
 
-
+```
 Query: machine learning engineer
 
 Top Job: Senior Machine Learning Engineer
@@ -130,111 +128,110 @@ Top Job: Senior Machine Learning Engineer
 Explanation:
 This role matches the query because the job description emphasizes Python,
 PyTorch, and experience developing machine learning pipelines.
-
+```
 
 This improves **interpretability and transparency** of recommendations.
 
 
-# Setup
+## Setup
 
 You can install dependencies using **uv** (recommended) or `pip`.
 
-## Using uv
+### Using uv
 
-
+```
 uv sync
-
+```
 
 This creates a virtual environment and installs dependencies from `pyproject.toml`.
 
 
-## Using pip
+### Using pip
 
-
+```
 pip install -r requirements.txt
+```
 
 
-
-# Dataset
+## Dataset
 
 Large CSV files are intentionally **excluded from the repository** due to GitHub file size limits.
 
 Place datasets in:
 
-
+```
 src/data/csv/postings.csv
-
+```
 
 After preprocessing, the cleaned dataset will be saved as:
 
-
+```
 src/data/csv/jobs_clean.csv
+```
 
 
-
-# Configuration
+## Configuration
 
 Configuration is managed using **Pydantic Settings** in `src/config.py`.
 
 Optional `.env` file:
 
-
+```
 LOG_LEVEL=INFO
 OLLAMA_URL=http://localhost:11434/api/generate
-
 OLLAMA_MODEL=phi3
+```
 
 
-
-# Usage
+## Usage
 
 All commands should be run from the project root.
 
 
-## 1. Preprocess dataset
+### 1. Preprocess dataset
 
-
+```
 python main.py preprocess --input src/data/csv/postings.csv --output src/data/csv/jobs_clean.csv
+```
 
 
+### 2. Retrieve and rank jobs
 
-## 2. Retrieve and rank jobs
-
-
+```
 python main.py retrieve --query "entry level machine learning engineer" --candidate-k 50 --top-k 10
-
+```
 
 Disable ranking experiments if needed:
 
-
+```
 python main.py retrieve --no-normalize
 python main.py retrieve --no-salary
+```
 
 
-
-## 3. Generate RAG explanation
+### 3. Generate RAG explanation
 
 Ensure Ollama is running:
 
-
+```
 ollama run phi3
-
+```
 
 Then run:
 
-
+```
 python main.py rag --query "entry level machine learning engineer" --rag-top-n 3
+```
 
 
+### 4. Run evaluation
 
-## 4. Run evaluation
-
-
+```
 python main.py eval
+```
 
 
-
-# Technologies Used
+## Technologies Used
 
 - **Python**
 - **Scikit-learn**
@@ -244,7 +241,7 @@ python main.py eval
 - **Ollama (local LLM inference)**
 
 
-# Future Improvements
+## Future Improvements
 
 Possible extensions include:
 
@@ -255,7 +252,7 @@ Possible extensions include:
 - agent-based job recommendation workflows
 
 
-# Why This Project Matters
+## Why This Project Matters
 
 This project illustrates how **classical ML pipelines and modern LLM reasoning can be combined** to build intelligent recommendation systems.
 
