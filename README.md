@@ -1,10 +1,10 @@
 # Job Intelligence Platform
+**Built with:** Python • Scikit-learn • Pydantic • Ollama • Retrieval-Augmented Generation
 
 An end-to-end **AI system for intelligent job discovery** that combines **classical information retrieval, hybrid ranking, and retrieval-augmented generation (RAG)**.
 
 This project demonstrates how modern job recommendation systems can be built by combining **traditional ML techniques with LLM-based reasoning**.
 
----
 
 ## Key Features
 
@@ -19,9 +19,9 @@ This project demonstrates how modern job recommendation systems can be built by 
 
 The system is designed as a **modular ML pipeline**, allowing each stage to be independently improved or replaced.
 
----
 
 # Architecture Overview
+```
 Raw Job Dataset
 ↓
 Data Preprocessing (Pydantic validation)
@@ -33,7 +33,7 @@ Hybrid Ranking Model
 Top-K Candidate Jobs
 ↓
 RAG Explanation Layer (Local LLM)
-
+```
 
 This architecture reflects many **real-world recommendation and search systems**, where:
 
@@ -41,9 +41,9 @@ This architecture reflects many **real-world recommendation and search systems**
 - ranking optimizes ordering
 - LLMs provide interpretability
 
----
 
 # Project Structure
+```
 src/
 ├── data/
 │ ├── models.py # Pydantic schema (PreprocessedJob)
@@ -64,8 +64,7 @@ src/
 │ └── metrics.py # Recall@K / MRR@K evaluation
 │
 └── cli.py # unified CLI entrypoint
-
----
+```
 
 # Core System Components
 
@@ -75,7 +74,6 @@ Generates candidate jobs using **TF-IDF vectorization with cosine similarity**.
 
 This stage efficiently narrows the search space by identifying jobs whose titles and descriptions are textually similar to the user query.
 
----
 
 ## Hybrid Ranking Model
 
@@ -92,7 +90,6 @@ optional salary boost
 
 Signal normalization ensures stable ranking behavior across different features.
 
----
 
 ## Evaluation Framework
 
@@ -116,7 +113,6 @@ Normalized ranking: Recall@10 = 0.68 MRR@10 = 0.43
 Salary boost ranking: Recall@10 = 0.68 MRR@10 = 0.43
 
 
----
 
 ## RAG Explanation Layer
 
@@ -138,7 +134,6 @@ PyTorch, and experience developing machine learning pipelines.
 
 This improves **interpretability and transparency** of recommendations.
 
----
 
 # Setup
 
@@ -152,7 +147,6 @@ uv sync
 
 This creates a virtual environment and installs dependencies from `pyproject.toml`.
 
----
 
 ## Using pip
 
@@ -160,7 +154,6 @@ This creates a virtual environment and installs dependencies from `pyproject.tom
 pip install -r requirements.txt
 
 
----
 
 # Dataset
 
@@ -178,7 +171,6 @@ After preprocessing, the cleaned dataset will be saved as:
 src/data/csv/jobs_clean.csv
 
 
----
 
 # Configuration
 
@@ -193,13 +185,11 @@ OLLAMA_URL=http://localhost:11434/api/generate
 OLLAMA_MODEL=phi3
 
 
----
 
 # Usage
 
 All commands should be run from the project root.
 
----
 
 ## 1. Preprocess dataset
 
@@ -207,7 +197,6 @@ All commands should be run from the project root.
 python main.py preprocess --input src/data/csv/postings.csv --output src/data/csv/jobs_clean.csv
 
 
----
 
 ## 2. Retrieve and rank jobs
 
@@ -222,7 +211,6 @@ python main.py retrieve --no-normalize
 python main.py retrieve --no-salary
 
 
----
 
 ## 3. Generate RAG explanation
 
@@ -238,7 +226,6 @@ Then run:
 python main.py rag --query "entry level machine learning engineer" --rag-top-n 3
 
 
----
 
 ## 4. Run evaluation
 
@@ -246,7 +233,6 @@ python main.py rag --query "entry level machine learning engineer" --rag-top-n 3
 python main.py eval
 
 
----
 
 # Technologies Used
 
@@ -257,7 +243,6 @@ python main.py eval
 - **Pandas**
 - **Ollama (local LLM inference)**
 
----
 
 # Future Improvements
 
@@ -269,7 +254,6 @@ Possible extensions include:
 - online learning from user interaction signals
 - agent-based job recommendation workflows
 
----
 
 # Why This Project Matters
 
