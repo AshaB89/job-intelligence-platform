@@ -210,3 +210,4 @@ __marimo__/
 # Keep .dta files in src/data/, but store CSVs/TSVs in subfolders
 src/data/**/*.csv
 src/data/**/*.tsv
+.env

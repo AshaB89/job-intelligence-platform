@@ -1,7 +1,10 @@
 import pandas as pd
+import logging
 from typing import List
 
 from src.data.models import PreprocessedJob
+
+logger = logging.getLogger(__name__)
 
 SELECTED_COLUMNS = [
     "job_id",
@@ -58,35 +61,37 @@ def validate_jobs(df: pd.DataFrame) -> List[PreprocessedJob]:
             jobs.append(job)
 
         except Exception as e:
-            print(f"Skipping invalid row: {e}")
+            logger.debug("Skipping invalid row: %s", e)
 
     return jobs
 
 
-def main():
+def run_preprocessing(input_csv: str, output_csv: str) -> None:
+    logger.info("Starting preprocessing pipeline.")
+    logger.info("Reading raw CSV: %s", input_csv)
 
-    print("🚀 Starting preprocessing pipeline...")
-
-    # Read raw CSV from dedicated CSV folder
-    df_raw = pd.read_csv("src/data/csv/postings.csv")
-
-    print("Raw dataset:", df_raw.shape)
+    df_raw = pd.read_csv(input_csv)
+    logger.info("Raw dataset shape: %s", df_raw.shape)
 
     df_clean = clean_dataframe(df_raw)
 
-    print("After cleaning:", df_clean.shape)
+    logger.info("After cleaning shape: %s", df_clean.shape)
 
     jobs = validate_jobs(df_clean)
 
-    print("Valid jobs:", len(jobs))
+    logger.info("Valid jobs: %s", len(jobs))
 
     df_valid = pd.DataFrame([job.model_dump() for job in jobs])
 
-    df_valid.to_csv("src/data/csv/jobs_clean.csv", index=False)
-
-    print("Cleaned dataset saved → csv/jobs_clean.csv")
-    print("Final dataset shape:", df_valid.shape)
+    df_valid.to_csv(output_csv, index=False)
+    logger.info("Cleaned dataset saved: %s", output_csv)
+    logger.info("Final dataset shape: %s", df_valid.shape)
 
 
 if __name__ == "__main__":
-    main()
+    from src.config import get_settings
+    from src.logging_config import configure_logging
+
+    settings = get_settings()
+    configure_logging(settings.log_level)
+    run_preprocessing(str(settings.postings_csv), str(settings.jobs_clean_csv))

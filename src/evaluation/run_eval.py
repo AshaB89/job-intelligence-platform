@@ -1,9 +1,11 @@
 import pandas as pd
+import logging
 from src.data.models import PreprocessedJob
 from src.retrieval.tfidf_engine import TFIDFRetrievalEngine
 from src.ranking.scorer import JobRanker
 from src.evaluation.metrics import recall_at_k, mrr_at_k
 
+logger = logging.getLogger(__name__)
 
 def _evaluate(engine, jobs, ranker, k_retrieve=50, k_eval=10):
     recall_scores = []
@@ -28,11 +30,15 @@ def _evaluate(engine, jobs, ranker, k_retrieve=50, k_eval=10):
 
 def main():
 
-    # Use a capped corpus so evaluation runs quickly on large datasets
-    corpus_rows = 5000
-    eval_rows = 200
+    from src.config import get_settings
+    settings = get_settings()
 
-    df = pd.read_csv("src/data/csv/jobs_clean.csv", dtype={"job_id": str}, nrows=corpus_rows)
+    logger.info("Loading evaluation corpus: %s", settings.jobs_clean_csv)
+    df = pd.read_csv(
+        str(settings.jobs_clean_csv),
+        dtype={"job_id": str},
+        nrows=settings.eval_corpus_rows,
+    )
 
     jobs = [
         PreprocessedJob(**record)
@@ -40,7 +46,7 @@ def main():
     ]
 
     engine = TFIDFRetrievalEngine(jobs)
-    sample_jobs = jobs[: min(eval_rows, len(jobs))]
+    sample_jobs = jobs[: min(settings.eval_rows, len(jobs))]
 
     # Configurations
     ranker_retrieval_only = None  # skip ranking
@@ -49,30 +55,21 @@ def main():
     ranker_salary = JobRanker(use_normalization=True, use_salary_boost=True)
 
     # Evaluate
-    r_recall, r_mrr = _evaluate(engine, sample_jobs, ranker_retrieval_only)
-    raw_recall, raw_mrr = _evaluate(engine, sample_jobs, ranker_raw)
-    norm_recall, norm_mrr = _evaluate(engine, sample_jobs, ranker_normalized)
-    sal_recall, sal_mrr = _evaluate(engine, sample_jobs, ranker_salary)
+    r_recall, r_mrr = _evaluate(engine, sample_jobs, ranker_retrieval_only, k_retrieve=settings.eval_k_retrieve, k_eval=settings.eval_k)
+    raw_recall, raw_mrr = _evaluate(engine, sample_jobs, ranker_raw, k_retrieve=settings.eval_k_retrieve, k_eval=settings.eval_k)
+    norm_recall, norm_mrr = _evaluate(engine, sample_jobs, ranker_normalized, k_retrieve=settings.eval_k_retrieve, k_eval=settings.eval_k)
+    sal_recall, sal_mrr = _evaluate(engine, sample_jobs, ranker_salary, k_retrieve=settings.eval_k_retrieve, k_eval=settings.eval_k)
 
-    print("Retrieval only:")
-    print("Recall@10:", round(r_recall, 2))
-    print("MRR@10:", round(r_mrr, 2))
-    print()
-
-    print("Raw ranking (no normalization, no salary boost):")
-    print("Recall@10:", round(raw_recall, 2))
-    print("MRR@10:", round(raw_mrr, 2))
-    print()
-
-    print("Normalized ranking:")
-    print("Recall@10:", round(norm_recall, 2))
-    print("MRR@10:", round(norm_mrr, 2))
-    print()
-
-    print("Salary boost:")
-    print("Recall@10:", round(sal_recall, 2))
-    print("MRR@10:", round(sal_mrr, 2))
+    logger.info("Retrieval only: Recall@%s=%.2f MRR@%s=%.2f", settings.eval_k, r_recall, settings.eval_k, r_mrr)
+    logger.info("Raw ranking: Recall@%s=%.2f MRR@%s=%.2f", settings.eval_k, raw_recall, settings.eval_k, raw_mrr)
+    logger.info("Normalized ranking: Recall@%s=%.2f MRR@%s=%.2f", settings.eval_k, norm_recall, settings.eval_k, norm_mrr)
+    logger.info("Salary boost: Recall@%s=%.2f MRR@%s=%.2f", settings.eval_k, sal_recall, settings.eval_k, sal_mrr)
 
 
 if __name__ == "__main__":
+    from src.config import get_settings
+    from src.logging_config import configure_logging
+
+    settings = get_settings()
+    configure_logging(settings.log_level)
     main()
