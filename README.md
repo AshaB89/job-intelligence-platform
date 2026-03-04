@@ -1,117 +1,284 @@
 # Job Intelligence Platform
 
-An end-to-end **job discovery and recommendation prototype** that combines:
+An end-to-end **AI system for intelligent job discovery** that combines **classical information retrieval, hybrid ranking, and retrieval-augmented generation (RAG)**.
 
-- **Classical retrieval (TF‑IDF)** for fast candidate generation
-- **Hybrid ranking** (re-ranking by relevance + recency + popularity + optional salary boost)
-- **RAG-style explanations** (local Ollama by default) to explain *why* a job matches
-- **Offline evaluation** (Recall@K, MRR@K) to compare retrieval vs ranking variants
+This project demonstrates how modern job recommendation systems can be built by combining **traditional ML techniques with LLM-based reasoning**.
 
-This repo is designed to be **portfolio-friendly**: clean structure, typed data models, centralized configuration, and production-grade logging.
+---
 
-## Project structure
+## Key Features
 
-- `src/data/`
-  - `models.py`: Pydantic schema (`PreprocessedJob`)
-  - `preprocessing.py`: CSV cleaning + validation → `jobs_clean.csv`
-  - `csv/`: local datasets (ignored by git; kept via `.gitkeep`)
-- `src/retrieval/`: TF‑IDF retrieval engine + runner
-- `src/ranking/`: hybrid ranker (normalization + salary boost toggles)
-- `src/rag/`: retrieval + ranking + LLM explanation
-- `src/evaluation/`: Recall@K + MRR@K evaluation runner
-- `src/cli.py`: single entrypoint CLI for end-to-end runs
+- **Candidate generation using TF-IDF retrieval** over job titles and descriptions
+- **Hybrid ranking model** combining:
+  - textual relevance
+  - recency signals
+  - popularity signals (views)
+  - optional salary boost
+- **Retrieval-Augmented Generation (RAG)** explanations using a **locally hosted LLM (Ollama)**
+- **Offline evaluation framework** using **Recall@K and MRR@K** to compare ranking strategies
 
-## Setup
+The system is designed as a **modular ML pipeline**, allowing each stage to be independently improved or replaced.
 
-You can use either **uv** (recommended) or plain `pip`.
+---
 
-### Using uv
+# Architecture Overview
+Raw Job Dataset
+↓
+Data Preprocessing (Pydantic validation)
+↓
+TF-IDF Retrieval Engine
+↓
+Hybrid Ranking Model
+↓
+Top-K Candidate Jobs
+↓
+RAG Explanation Layer (Local LLM)
 
-```bash
-uv sync
-```
 
-This will create/refresh the virtualenv and install dependencies from `pyproject.toml`.
+This architecture reflects many **real-world recommendation and search systems**, where:
 
-### Using pip
+- retrieval generates candidate items
+- ranking optimizes ordering
+- LLMs provide interpretability
 
-```bash
-pip install -r requirements.txt
-```
+---
 
-### Data (not committed)
+# Project Structure
+src/
+├── data/
+│ ├── models.py # Pydantic schema (PreprocessedJob)
+│ ├── preprocessing.py # data cleaning + validation
+│ └── csv/ # raw & processed datasets (gitignored)
+│
+├── retrieval/
+│ └── tfidf_engine.py # candidate generation
+│
+├── ranking/
+│ └── scorer.py # hybrid ranking logic
+│
+├── rag/
+│ ├── explainer.py # local LLM explanation
+│ └── run_rag.py
+│
+├── evaluation/
+│ └── metrics.py # Recall@K / MRR@K evaluation
+│
+└── cli.py # unified CLI entrypoint
 
-Large CSVs are intentionally **ignored** (GitHub file-size limits). Place your datasets here:
+---
 
-- `src/data/csv/postings.csv` (raw)
-- `src/data/csv/jobs_clean.csv` (generated)
+# Core System Components
 
-## Configuration
+## Retrieval Layer
 
-Configuration is centralized in `src/config.py` (Pydantic `Settings`).
+Generates candidate jobs using **TF-IDF vectorization with cosine similarity**.
 
-Optional `.env` file (ignored by git):
+This stage efficiently narrows the search space by identifying jobs whose titles and descriptions are textually similar to the user query.
 
-```env
-LOG_LEVEL=INFO
-OLLAMA_URL=http://localhost:11434/api/generate
-OLLAMA_MODEL=phi3
-```
+---
 
-## Usage (CLI)
+## Hybrid Ranking Model
 
-All commands are run from the project root.
+Retrieved candidates are re-ranked using multiple signals.
+Final Score =
+α · textual similarity
 
-### 1) Preprocess raw postings → clean dataset
+β · recency score
 
-```bash
-python main.py preprocess --input src/data/csv/postings.csv --output src/data/csv/jobs_clean.csv
-```
+γ · popularity score
 
-### 2) Retrieve + rank (hybrid)
+optional salary boost
 
-```bash
-python main.py retrieve --query "entry level machine learning engineer" --candidate-k 50 --top-k 10
-```
 
-Disable ranker normalization or salary boost for experiments:
+Signal normalization ensures stable ranking behavior across different features.
 
-```bash
-python main.py retrieve --no-normalize
-python main.py retrieve --no-salary
-```
+---
 
-### 3) RAG explanation (local Ollama)
+## Evaluation Framework
 
-Make sure Ollama is running and the model exists (example):
+The platform includes an **offline evaluation pipeline** implementing:
 
-```bash
-ollama run phi3
-```
+- **Recall@K**
+- **Mean Reciprocal Rank (MRR@K)**
 
-Then:
+This allows systematic comparison between:
 
-```bash
-python main.py rag --query "entry level machine learning engineer" --rag-top-n 3
-```
-
-### 4) Offline evaluation (Recall@10 / MRR@10)
-
-```bash
-python main.py eval
-```
+- retrieval-only baseline
+- raw hybrid ranking
+- normalized ranking
+- salary-boost ranking
 
 Example output:
 
-```text
-Retrieval only: Recall@10=0.70 MRR@10=0.45
-Raw ranking: Recall@10=0.26 MRR@10=0.10
-Normalized ranking: Recall@10=0.68 MRR@10=0.43
-Salary boost: Recall@10=0.68 MRR@10=0.43
-```
 
-## Notes
+Retrieval only: Recall@10 = 0.70 MRR@10 = 0.45
+Normalized ranking: Recall@10 = 0.68 MRR@10 = 0.43
+Salary boost ranking: Recall@10 = 0.68 MRR@10 = 0.43
 
-- **Why `.gitignore` ignores datasets**: large files break GitHub pushes; keep data local and version the code.
-- **Ranking controls**: `use_normalization` and `use_salary_boost` are exposed to make experiments reproducible.
-- **Logging**: all runners use standard Python logging; configure with `LOG_LEVEL`.
+
+---
+
+## RAG Explanation Layer
+
+A local LLM (via **Ollama**) generates explanations for recommended jobs.
+
+The model receives the **top ranked jobs as context** and produces grounded reasoning explaining why a job matches the user query.
+
+Example:
+
+
+Query: machine learning engineer
+
+Top Job: Senior Machine Learning Engineer
+
+Explanation:
+This role matches the query because the job description emphasizes Python,
+PyTorch, and experience developing machine learning pipelines.
+
+
+This improves **interpretability and transparency** of recommendations.
+
+---
+
+# Setup
+
+You can install dependencies using **uv** (recommended) or `pip`.
+
+## Using uv
+
+
+uv sync
+
+
+This creates a virtual environment and installs dependencies from `pyproject.toml`.
+
+---
+
+## Using pip
+
+
+pip install -r requirements.txt
+
+
+---
+
+# Dataset
+
+Large CSV files are intentionally **excluded from the repository** due to GitHub file size limits.
+
+Place datasets in:
+
+
+src/data/csv/postings.csv
+
+
+After preprocessing, the cleaned dataset will be saved as:
+
+
+src/data/csv/jobs_clean.csv
+
+
+---
+
+# Configuration
+
+Configuration is managed using **Pydantic Settings** in `src/config.py`.
+
+Optional `.env` file:
+
+
+LOG_LEVEL=INFO
+OLLAMA_URL=http://localhost:11434/api/generate
+
+OLLAMA_MODEL=phi3
+
+
+---
+
+# Usage
+
+All commands should be run from the project root.
+
+---
+
+## 1. Preprocess dataset
+
+
+python main.py preprocess --input src/data/csv/postings.csv --output src/data/csv/jobs_clean.csv
+
+
+---
+
+## 2. Retrieve and rank jobs
+
+
+python main.py retrieve --query "entry level machine learning engineer" --candidate-k 50 --top-k 10
+
+
+Disable ranking experiments if needed:
+
+
+python main.py retrieve --no-normalize
+python main.py retrieve --no-salary
+
+
+---
+
+## 3. Generate RAG explanation
+
+Ensure Ollama is running:
+
+
+ollama run phi3
+
+
+Then run:
+
+
+python main.py rag --query "entry level machine learning engineer" --rag-top-n 3
+
+
+---
+
+## 4. Run evaluation
+
+
+python main.py eval
+
+
+---
+
+# Technologies Used
+
+- **Python**
+- **Scikit-learn**
+- **Pydantic**
+- **NumPy**
+- **Pandas**
+- **Ollama (local LLM inference)**
+
+---
+
+# Future Improvements
+
+Possible extensions include:
+
+- semantic retrieval using sentence-transformer embeddings
+- FAISS vector search
+- FastAPI deployment
+- online learning from user interaction signals
+- agent-based job recommendation workflows
+
+---
+
+# Why This Project Matters
+
+This project illustrates how **classical ML pipelines and modern LLM reasoning can be combined** to build intelligent recommendation systems.
+
+It demonstrates key concepts used in real-world systems:
+
+- candidate generation
+- ranking models
+- offline evaluation
+- retrieval-augmented generation
+- modular ML system design
