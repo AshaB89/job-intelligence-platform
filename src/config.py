@@ -38,9 +38,9 @@ class Settings(BaseSettings):
     eval_k: int = 10
 
     # RAG (local Ollama by default)
-    ollama_url: str = "http://localhost:11434/api/generate"
-    ollama_model: str = "phi3"
-    ollama_timeout_s: float = 60.0
+    ollama_url: str = "http://host.docker.internal:11434/api/generate"
+    ollama_model: str = "tinyllama"
+    ollama_timeout_s: float = 300.0
 
     # Optional HF token (kept for future; not required for current Ollama flow)
     hf_api_key: Optional[str] = None

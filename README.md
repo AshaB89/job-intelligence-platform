@@ -16,7 +16,7 @@ This project demonstrates how modern job recommendation systems can be built by 
   - optional salary boost
 - **Retrieval-Augmented Generation (RAG)** explanations using a **locally hosted LLM (Ollama)**
 - **Offline evaluation framework** using **Recall@K and MRR@K** to compare ranking strategies
-
+- **FastAPI microservice** exposing the search + RAG pipeline via a /search endpoint
 The system is designed as a **modular ML pipeline**, allowing each stage to be independently improved or replaced.
 
 
@@ -62,6 +62,9 @@ src/
 │
 ├── evaluation/
 │ └── metrics.py # Recall@K / MRR@K evaluation
+│
+├── api/
+│ └── app.py # FastAPI service (search endpoint)
 │
 └── cli.py # unified CLI entrypoint
 ```
@@ -178,8 +181,8 @@ Optional `.env` file:
 
 ```
 LOG_LEVEL=INFO
-OLLAMA_URL=http://localhost:11434/api/generate
-OLLAMA_MODEL=phi3
+OLLAMA_URL=http://host.docker.internal:11434/api/generate
+OLLAMA_MODEL=tinyllama
 ```
 
 
@@ -230,6 +233,12 @@ python main.py rag --query "entry level machine learning engineer" --rag-top-n 3
 python main.py eval
 ```
 
+### 5. Run the FastAPI service
+
+After preprocessing your data so that `src/data/csv/jobs_clean.csv` exists, you can start the HTTP API:
+
+```bash
+uvicorn src.api.app:app --reload
 
 ## Technologies Used
 
@@ -239,6 +248,7 @@ python main.py eval
 - **NumPy**
 - **Pandas**
 - **Ollama (local LLM inference)**
+- **FastAPI**
 
 
 ## Future Improvements
@@ -247,7 +257,6 @@ Possible extensions include:
 
 - semantic retrieval using sentence-transformer embeddings
 - FAISS vector search
-- FastAPI deployment
 - online learning from user interaction signals
 - agent-based job recommendation workflows
 
